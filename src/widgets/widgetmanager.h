@@ -3,10 +3,12 @@
 
 #include <PainterEngine.h>
 
+#include "../kernel/vector.h"
+
 typedef struct __OTS_WidgetManager {
     int nowWidget;
     int width, height;
-    px_vector *widgets;
+    OTS_Vector *widgets;
     PX_Object *selfWidget;
 } OTS_WidgetManager;
 

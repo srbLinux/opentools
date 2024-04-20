@@ -4,8 +4,8 @@
 OTS_WidgetManager *OTS_WidgetManager_Initialize(int width, int height) {
     OTS_WidgetManager *manager = (OTS_WidgetManager *)MP_Malloc(mp, sizeof(OTS_WidgetManager));
     OTS_printf("OTS_WidgetManager object have memory, address is %p.\n", manager);
-    manager->widgets = (px_vector *)MP_Malloc(mp, sizeof(px_vector));
-    int vflag = PX_VectorInitialize(mp, manager->widgets, sizeof(PX_Object), 10);
+    manager->widgets = OTS_Vector_Initialize(20);
+    // int vflag = PX_VectorInitialize(mp, manager->widgets, sizeof(PX_Object), 10);
     OTS_printf("OTS_WidgetManager::widgets is a vector object, it has been initialize, check %d.\n", (manager->widgets!=NULL));
     manager->width = width, manager->height = height; manager->nowWidget = -1;
     manager->selfWidget = PX_Object_WidgetCreate(mp, root, 0, WINDOW_DEFAULT_WIDTH - width, WINDOW_DEFAULT_WIDTH, height-30, "", NULL);
@@ -26,7 +26,7 @@ int OTS_WidgetManager_AddWidget(OTS_WidgetManager *manager, PX_Object *widget) {
         OTS_err_info("OTS_WidgetManger_AddWidget: OTS_WidgetManager::widgets is null.\n");
         return PX_FALSE;
     }
-    px_bool success = PX_VectorPushback(manager->widgets, widget);
+    px_bool success = OTS_Vector_Pushback(manager->widgets, widget);
     PX_Object_WidgetHide(widget);   // 默认新添加的窗口不显示
     if (PX_VectorSize(manager->widgets)==1) {   // 如果现在添加的窗口只有一个，那么显示这个窗口
         manager->nowWidget = 0;
@@ -52,9 +52,11 @@ px_bool OTS_WidgetManager_WidgetShowByIndex(OTS_WidgetManager *manager, int inde
     }
     OTS_printf("%s: now manager has %d widget.\n", __func__, PX_VectorSize(manager->widgets));
     PX_Object *oldWidget=NULL, *newWidget=NULL;
-    oldWidget = PX_VECTORAT(PX_Object, manager->widgets, manager->nowWidget);
+    // oldWidget = PX_VECTORAT(PX_Object, manager->widgets, manager->nowWidget);
+    oldWidget = (PX_Object *)OTS_Vector_AT(manager->widgets, manager->nowWidget);
     PX_Object_WidgetHide(oldWidget); manager->nowWidget = index;
-    newWidget = PX_VECTORAT(PX_Object, manager->widgets, manager->nowWidget);
+    // newWidget = PX_VECTORAT(PX_Object, manager->widgets, manager->nowWidget);
+    newWidget = (PX_Object *)OTS_Vector_AT(manager->widgets, manager->nowWidget);
     PX_Object_WidgetShow(newWidget);
 }
 
@@ -67,10 +69,11 @@ px_bool OTS_WidgetManager_WidgetShowByObject(OTS_WidgetManager *manager, PX_Obje
     int find = PX_FALSE;
     PX_Object *findWidget=NULL, *oldWidget=NULL;
     for (int i=0;i<PX_VectorSize(manager->widgets);i++) {
-        findWidget = PX_VECTORAT(PX_Object, manager->widgets, i);
+        // findWidget = PX_VECTORAT(PX_Object, manager->widgets, i);
+        findWidget = (PX_Object *)OTS_Vector_AT(manager->widgets, i);
         if (memcmp(findWidget, widget, sizeof(PX_Object)) == 0) {
             find = PX_TRUE; 
-            oldWidget = PX_VECTORAT(PX_Object, manager->widgets, manager->nowWidget);
+            oldWidget = (PX_Object *)OTS_Vector_AT(manager->widgets, manager->nowWidget);
             PX_Object_WidgetHide(oldWidget); manager->nowWidget = i; break;
         }
     }
