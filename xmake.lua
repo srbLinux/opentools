@@ -31,6 +31,7 @@ target("opentools")
 
     -- 直接导入linarchive库
     add_links("archive")
+    add_packages("libharu")
 
     --  本系统实现代码  --
 
