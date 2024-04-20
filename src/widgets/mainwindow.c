@@ -49,11 +49,11 @@ void OTS_MainWindow_Initialize() {
     mainWidget->childItem = PX_Object_MenuAddItem(mainWidget->menuWidget, mainWidget->parentItem, "About Software", AboutSoftwareWidget, mainWidget);
 
     /***    添加子窗口    ***/
-    OTS_ImageToPDFWidget *ots_imagetopdfWidget = OTS_ImageToPDFWidget_Initialize(WINDOW_DEFAULT_WIDTH-30, WINDOW_DEFAULT_HEIGHT);
-    mainWidget->toPDFWidget = ots_imagetopdfWidget->widget; OTS_WidgetManager_AddWidget(mainWidget->managerWidget, mainWidget->toPDFWidget);
-
     OTS_AboutSoftwareWidget *ots_aboutSWWidget = OTS_AboutSoftwareWidget_Initialize(WINDOW_DEFAULT_WIDTH-30, WINDOW_DEFAULT_HEIGHT);
     mainWidget->aboutWidget = ots_aboutSWWidget->widget; OTS_WidgetManager_AddWidget(mainWidget->managerWidget, mainWidget->aboutWidget); 
+
+    OTS_ImageToPDFWidget *ots_imagetopdfWidget = OTS_ImageToPDFWidget_Initialize(WINDOW_DEFAULT_WIDTH-30, WINDOW_DEFAULT_HEIGHT);
+    mainWidget->toPDFWidget = ots_imagetopdfWidget->widget; OTS_WidgetManager_AddWidget(mainWidget->managerWidget, mainWidget->toPDFWidget);
 
     //
     OTS_Global_StyleChange(MainWindowChangeByGS, mainWidget);
@@ -70,7 +70,7 @@ void SettingWidget(px_void *ptr) {
 
 void ImageToPDFWidget(px_void *ptr) {
     MainWindow *obj = (MainWindow *)ptr;
-    OTS_WidgetManager_WidgetShowByObject(obj->managerWidget, obj->toPDFWidget);
+    OTS_WidgetManager_WidgetShowByIndex(obj->managerWidget, 1);
 }
 
 void PDFToImageWidget(px_void *ptr) {
@@ -81,7 +81,7 @@ void PDFToImageWidget(px_void *ptr) {
 void AboutSoftwareWidget(px_void *ptr) {
     MainWindow *obj = (MainWindow *)ptr;
     OTS_printf("all.\n");
-    OTS_WidgetManager_WidgetShowByObject(obj->managerWidget, obj->aboutWidget);
+    OTS_WidgetManager_WidgetShowByIndex(obj->managerWidget, 0);
 }
 
 void MainWindowChangeByGS(px_void *data) {
