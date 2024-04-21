@@ -13,4 +13,8 @@ const char *OTS_System_GetCurrentPath() {
     getcwd(path, 256);
     return path;
 }
+#elif _WIN32
+const char *OTS_System_GetCurrentPath() {
+
+}
 #endif

@@ -7,6 +7,9 @@
 #define OTS_DEFUALT_WIDGET_CREATE \
     PX_Object_WidgetCreate(mp, root, 0, WINDOW_DEFAULT_WIDTH - width, WINDOW_DEFAULT_WIDTH, height-30, "", NULL);
 
+#define OTS_ROOT_WIDGET_CREATE(name) \
+    PX_Object_WidgetCreate(mp, NULL, 300, 300, width, height, name, gs->textFont->fontModule)
+
 #include <stdio.h>
 
 #if __DEBUG_OTS__

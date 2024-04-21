@@ -6,9 +6,9 @@
  * @struct  OTS_Vector
  * @version since 1.0.0
  * @brief   This is a dynamic array that does not copy data. The elements in the vector merely point to the actual data, 
- *          rather than containing the data itself. The main purpose of this approach is to allow access to the original data directly.
- *          This approach is suitable for scenarios where frequent access and updating of data are required, especially in cases of large 
- *          data volumes, as it reduces memory overhead and improves program performance.
+ *          rather than containing the data itself. The main purpose of this approach is to allow access to the original
+ *          data directly. This approach is suitable for scenarios where frequent access and updating of data are required,
+ *          especially in cases of large data volumes, as it reduces memory overhead and improves program performance.
  * 
 */
 typedef struct __OTS_Vector {

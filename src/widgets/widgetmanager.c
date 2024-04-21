@@ -27,8 +27,10 @@ int OTS_WidgetManager_AddWidget(OTS_WidgetManager *manager, PX_Object *widget) {
         return PX_FALSE;
     }
     px_bool success = OTS_Vector_Pushback(manager->widgets, widget);
-    PX_Object_WidgetHide(widget);   // 默认新添加的窗口不显示
-    if (PX_VectorSize(manager->widgets)==1) {   // 如果现在添加的窗口只有一个，那么显示这个窗口
+    // By default, the newly added window is not shown.
+    PX_Object_WidgetHide(widget);
+    // If there is only one window in the manager currently, then display this window.
+    if (PX_VectorSize(manager->widgets)==1) {
         manager->nowWidget = 0;
         PX_Object_WidgetShow(widget); PX_Object_WidgetHide(manager->selfWidget);
     }
@@ -52,10 +54,8 @@ px_bool OTS_WidgetManager_WidgetShowByIndex(OTS_WidgetManager *manager, int inde
     }
     OTS_printf("%s: now manager has %d widget.\n", __func__, PX_VectorSize(manager->widgets));
     PX_Object *oldWidget=NULL, *newWidget=NULL;
-    // oldWidget = PX_VECTORAT(PX_Object, manager->widgets, manager->nowWidget);
     oldWidget = (PX_Object *)OTS_Vector_AT(manager->widgets, manager->nowWidget);
     PX_Object_WidgetHide(oldWidget); manager->nowWidget = index;
-    // newWidget = PX_VECTORAT(PX_Object, manager->widgets, manager->nowWidget);
     newWidget = (PX_Object *)OTS_Vector_AT(manager->widgets, manager->nowWidget);
     PX_Object_WidgetShow(newWidget);
 }
@@ -71,7 +71,7 @@ px_bool OTS_WidgetManager_WidgetShowByObject(OTS_WidgetManager *manager, PX_Obje
     for (int i=0;i<PX_VectorSize(manager->widgets);i++) {
         // findWidget = PX_VECTORAT(PX_Object, manager->widgets, i);
         findWidget = (PX_Object *)OTS_Vector_AT(manager->widgets, i);
-        if (memcmp(findWidget, widget, sizeof(PX_Object)) == 0) {
+        if (findWidget == widget) {
             find = PX_TRUE; 
             oldWidget = (PX_Object *)OTS_Vector_AT(manager->widgets, manager->nowWidget);
             PX_Object_WidgetHide(oldWidget); manager->nowWidget = i; break;

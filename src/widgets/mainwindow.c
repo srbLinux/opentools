@@ -10,6 +10,8 @@
 #include "./imagetopdfwidget.h"
 #include "./aboutsoftwarewidget.h"
 
+#include "./selectfileswidget.h"
+
 #ifdef __DEBUG_OPEN__
 #include <stdio.h>
 #endif
@@ -48,7 +50,7 @@ void OTS_MainWindow_Initialize() {
     mainWidget->childItem = PX_Object_MenuAddItem(mainWidget->menuWidget, mainWidget->parentItem, "Software Settings", SettingWidget, mainWidget);
     mainWidget->childItem = PX_Object_MenuAddItem(mainWidget->menuWidget, mainWidget->parentItem, "About Software", AboutSoftwareWidget, mainWidget);
 
-    /***    添加子窗口    ***/
+    /***    Add SubWidget    ***/
     OTS_AboutSoftwareWidget *ots_aboutSWWidget = OTS_AboutSoftwareWidget_Initialize(WINDOW_DEFAULT_WIDTH-30, WINDOW_DEFAULT_HEIGHT);
     mainWidget->aboutWidget = ots_aboutSWWidget->widget; OTS_WidgetManager_AddWidget(mainWidget->managerWidget, mainWidget->aboutWidget); 
 
