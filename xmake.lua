@@ -10,6 +10,7 @@ target("opentools")
     add_files("3rdparty/painterengine/kernel/*.c")
     add_includedirs("3rdparty/painterengine/runtime")
     add_files("3rdparty/painterengine/runtime/*.c")
+    add_includedirs("3rdparty/painterengine/platform/modules")
 
     if is_plat("linux") then
         add_includedirs("3rdparty/painterengine/platform/linux")
@@ -25,7 +26,9 @@ target("opentools")
     -- 在Linux平台上启用GL、glut等库和POSIX
     if is_plat("linux") then 
         add_defines("_DEFAULT_SOURCE")
+        add_defines("__USE_MISC")
         add_links("GL", "glut", "pthread")
+        -- add_cxflags("-std=posix", {force = true})
     end
     add_includedirs("3rdparty/painterengine")
 

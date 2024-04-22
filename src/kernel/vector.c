@@ -63,6 +63,10 @@ void *OTS_Vector_AT(OTS_Vector *vec, int index) {
     return vec->data[index];
 }
 
+int OTS_Vector_Size(OTS_Vector *vec) {
+    return vec->size;
+}
+
 void OTS_Vector_Free(OTS_Vector *vec) {
     free(vec->data); free(vec);
 }
