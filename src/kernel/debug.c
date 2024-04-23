@@ -5,7 +5,21 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#if __linux__
+#include <unistd.h>
+#include <arpa/inet.h>
+#endif
+
 #include "../defines.h"
+
+typedef struct {
+    int port;
+    char *url;
+    int sockfd;
+} TcpSocket;
+
+static TcpSocket *connectToServer(const char *url, int port, const char *msg);
+static void recvServerMessage(TcpSocket *socket);
 
 char *OTS_Debug_FormatTimeNow() {
     char *strtime = (char *)malloc(sizeof(char)*32);
@@ -18,13 +32,15 @@ char *OTS_Debug_FormatTimeNow() {
     return strtime;
 }
 
-// 辅助函数，用于格式化输出调试消息
-void OTS_Debug_Print(const char *format, ...) {
-    va_list args; // 定义可变参数列表
-    va_start(args, format); // 初始化可变参数列表
-    // 输出源文件名、行号和函数名
-    fprintf(stdout, "%s - [%s:%d] %s : ", OTS_Debug_FormatTimeNow(), __FILE__, __LINE__, __func__);
-    // 输出格式化后的消息
-    vfprintf(stdout, format, args);
-    va_end(args); // 结束可变参数列表
+#if __linux__
+int uploadMessageToServer(const char *url, int port, const char *msg) {
+    int sockfd;
+    struct sockaddr_in server_addr;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd==-1) {
+
+    }
 }
+#endif
+
+

@@ -21,6 +21,7 @@
 #define OTS_debug fprintf
 #define OTS_err_info printf
 
+extern int MACID;
 extern FILE *logFILE;
 
 #endif

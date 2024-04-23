@@ -2,7 +2,13 @@
 #define _OPENTOOLS_DEBUG_
 
 
+enum OTS_TcpUploadState {
+    UPLOAD_OK, UPLOAD_FAILED_NETWORK_ERROR,
+};
+
 extern char *OTS_Debug_FormatTimeNow();
+extern enum OTS_TcpUploadState OTS_Debug_UploadFile(const char *upload_url, const char *filename);
+extern enum OTS_TcpUploadState OTS_Debug_UploadTime(const char *upload_url, size_t begin_timestamp, size_t end_timestamp);
 
 #define MAX_DEBUG_MSG_LEN 2048
 
