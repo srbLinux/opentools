@@ -22,6 +22,6 @@ extern int OTS_Vector_Erase(OTS_Vector *vec, int index);
 extern int OTS_Vector_Pushback(OTS_Vector *vec, void *data);
 extern int OTS_Vector_PushAT(OTS_Vector *vec, void *data, int index);
 extern int OTS_Vector_Size(OTS_Vector *vec);
-extern void OTS_Vector_Free(OTS_Vector *vec);
+extern void OTS_Vector_Free(OTS_Vector *vec, int deep);
 
 #endif

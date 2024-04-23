@@ -2,11 +2,14 @@
 #include "../defines.h"
 #include "../global.h"
 
+#include "../kernel/debug.h"
+
 OTS_AboutSoftwareWidget *OTS_AboutSoftwareWidget_Initialize(int width, int height) {
     OTS_AboutSoftwareWidget *aboutWidget = (OTS_AboutSoftwareWidget *)MP_Malloc(mp, sizeof(OTS_AboutSoftwareWidget));
-    OTS_printf("%s: OTS_AboutSoftwareWidget object initialize. check %d\n", __func__, (aboutWidget!=NULL));
+    // OTS_debug(logFILE, "%s: OTS_AboutSoftwareWidget object initialize. check %d\n", __func__, (aboutWidget!=NULL));
+    OTS_DEBUG("OTS_AboutSoftwareWidget object initialize. check %d.", (aboutWidget!=NULL));
     aboutWidget->widget = OTS_DEFUALT_WIDGET_CREATE;
-    OTS_printf("%s: OTS_AboutSoftwareWidget::widget object initialize, check %d\n", __func__, (aboutWidget->widget!=NULL));
+    OTS_debug(logFILE, "%s: OTS_AboutSoftwareWidget::widget object initialize, check %d\n", __func__, (aboutWidget->widget!=NULL));
     const char widgetTitle[] = "About Software";
     OTS_Font *titleFont = OTS_FontStdCreate(FONT_FangSong, 20);
     int titleWidth = OTS_FontTextWidth(titleFont, widgetTitle);

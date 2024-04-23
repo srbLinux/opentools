@@ -67,6 +67,11 @@ int OTS_Vector_Size(OTS_Vector *vec) {
     return vec->size;
 }
 
-void OTS_Vector_Free(OTS_Vector *vec) {
+void OTS_Vector_Free(OTS_Vector *vec, int deep) {
+    if (deep) {
+        for (int i=0;i<vec->size;i++) {
+            free(vec->data[i]);
+        }
+    }
     free(vec->data); free(vec);
 }

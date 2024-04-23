@@ -5,6 +5,7 @@
 #include "./widgetmanager.h"
 #include "../kernel/font.h"
 #include "../kernel/style.h"
+#include "../kernel/debug.h"
 
 // widgets headers
 #include "./imagetopdfwidget.h"
@@ -36,7 +37,7 @@ void OTS_MainWindow_Initialize() {
     PainterEngine_Initialize(WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT);
     gs = OTS_Style_Software_Create(SOFTWARE_DARK);
     MainWindow *mainWidget=(MainWindow *)MP_Malloc(mp, sizeof(MainWindow));
-    OTS_printf("MainwWindow object initialize, check %d.\n", (mainWidget!=NULL));
+    OTS_DEBUG("MainwWindow object initialize, check %d.\n", (mainWidget!=NULL));
     mainWidget->menuWidget = PX_Object_MenuCreate(mp, root, 0, 0, WINDOW_DEFAULT_WIDTH/4, gs->textFont->fontModule);
     mainWidget->managerWidget = OTS_WidgetManager_Initialize(WINDOW_DEFAULT_WIDTH-30, WINDOW_DEFAULT_HEIGHT);
     mainWidget->parentItem = PX_Object_MenuAddItem(mainWidget->menuWidget, NULL, "File Operation", NULL, NULL);
@@ -82,7 +83,7 @@ void PDFToImageWidget(px_void *ptr) {
 
 void AboutSoftwareWidget(px_void *ptr) {
     MainWindow *obj = (MainWindow *)ptr;
-    OTS_printf("all.\n");
+    OTS_DEBUG("all %d.\n", 1);
     OTS_WidgetManager_WidgetShowByIndex(obj->managerWidget, 0);
 }
 

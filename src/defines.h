@@ -18,6 +18,9 @@
 #define OTS_printf(str, ...)
 #endif
 
+#define OTS_debug fprintf
 #define OTS_err_info printf
+
+extern FILE *logFILE;
 
 #endif

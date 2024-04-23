@@ -6,12 +6,13 @@
 
 #include "../defines.h"
 #include "./platform.h"
+#include "../kernel/debug.h"
 
 OTS_Font *OTS_FontStdCreate(enum OTS_STD_Font font_, int fontSize) {
     OTS_Font *font = MP_Malloc(mp, sizeof(OTS_Font));
     font->family = MP_Malloc(mp, sizeof(char) * 128);
     char *ttfPath = (char *)malloc(sizeof(char) * 512);
-    OTS_printf("%s: buffer and OTS_Font object initialize. check %d.\n", __func__, (font!=NULL));
+    OTS_DEBUG("buffer and OTS_Font object initialize. check %d.\n", (font!=NULL));
     switch (font_) {
     case FONT_SimSunb:
         strcpy(font->family, "SimSunb");
@@ -32,7 +33,7 @@ OTS_Font *OTS_FontStdCreate(enum OTS_STD_Font font_, int fontSize) {
     PX_FontModuleInitialize(mp, font->fontModule);
     PX_IO_Data io = PX_LoadFileToIOData(ttfPath);
     px_bool ttf = PX_FontModuleInitializeTTF(mp, font->fontModule, PX_FONTMODULE_CODEPAGE_UTF8, fontSize, io.buffer, io.size);
-    OTS_printf("%s: PX_FontModuleLoad initialize, PX_FontModule::codePage index is %d, check %d.\n", __func__, font->fontModule->codePage, ttf);
+    OTS_DEBUG("PX_FontModuleLoad initialize, PX_FontModule::codePage index is %d, check %d.\n", font->fontModule->codePage, ttf);
     fclose(fptr);
     return font;
 }

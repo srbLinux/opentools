@@ -1,9 +1,10 @@
 #include "style.h"
+#include "../global.h"
 #include "../defines.h"
 
 extern OTS_Style *OTS_Style_Software_Create(enum OTS_Software_Style style) {
     OTS_Style *gStyle = (OTS_Style *)MP_Malloc(mp, sizeof(OTS_Style));
-    OTS_printf("%s: OTS_Style object initialize. check %d\n", __func__, (gStyle!=NULL));
+    OTS_debug(logFILE, "%s: OTS_Style object initialize. check %d\n", __func__, (gStyle!=NULL));
     switch (style) {
     case SOFTWARE_DAILY:
         gStyle->textColor = PX_COLOR(255, 0, 0, 0);
@@ -14,6 +15,6 @@ extern OTS_Style *OTS_Style_Software_Create(enum OTS_Software_Style style) {
         gStyle->backgroundColor = PX_COLOR(255, 16, 16, 20);
     }
     gStyle->textFont = OTS_FontStdCreate(FONT_SimSunb, 18);
-    OTS_printf("%s: OTS_Style::textFont object initialize. check %d\n", __func__, (gStyle->textFont!=NULL));
+    OTS_debug(logFILE, "%s: OTS_Style::textFont object initialize. check %d\n", __func__, (gStyle->textFont!=NULL));
     return gStyle;
 }
