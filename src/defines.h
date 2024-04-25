@@ -24,4 +24,8 @@
 extern int MACID;
 extern FILE *logFILE;
 
+#if __linux__
+#define OTS_EXPORT __attribute__((visibility("default")))
+#endif
+
 #endif

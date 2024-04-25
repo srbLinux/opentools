@@ -27,14 +27,15 @@ target("opentools")
     if is_plat("linux") then 
         add_defines("_DEFAULT_SOURCE")
         add_defines("__USE_MISC")
-        add_links("GL", "glut", "pthread")
+        add_links("GL", "glut", "pthread", "hpdf")
+        -- add_linkdirs("/usr/local/share/libharu")
         -- add_cxflags("-std=posix", {force = true})
     end
     add_includedirs("3rdparty/painterengine")
 
-    -- 直接导入linarchive库
+    -- 直接导入libarchive库
     add_links("archive")
-    add_packages("libharu")
+    -- add_packages("haru")
 
     --  本系统实现代码  --
 

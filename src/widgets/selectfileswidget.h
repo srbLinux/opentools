@@ -16,12 +16,15 @@ typedef struct __OTS_SelectFilesWidget {
     struct OTS_SelectFilesWidget_Private *data;
 } OTS_SelectFilesWidget;
 
+typedef void (*OTS_SelectFilesWidget_AddItemEvent)(void *uptr, void *data);
+
 extern OTS_SelectFilesWidget *OTS_SelectFilesWidget_Initialize(int width, int height, const char *name, const char *filter);
 extern void OTS_SelectFilesWidget_SetFilter(OTS_SelectFilesWidget *widget, const char *filter);
 extern const char *OTS_SelectFilesWidget_GetFilter(OTS_SelectFilesWidget *widget);
 extern OTS_Vector *OTS_SelectFilesWidget_GetFilesPath(OTS_SelectFilesWidget *widget);
 extern void OTS_SelectFilesWidget_SetFilesPath(OTS_SelectFilesWidget *widget, const char **filespath, int fileslen);
 extern void OTS_SelectFilesWidget_AddFile(OTS_SelectFilesWidget *widget, const char *filepath);
+extern void OTS_SelectFilesWidget_RegisterAddItemEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_AddItemEvent event);
 extern int OTS_SelectFilesWidget_Hide(OTS_SelectFilesWidget *widget);
 extern void OTS_SelectFilesWidget_Free(OTS_SelectFilesWidget *widget);
 

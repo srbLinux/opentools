@@ -19,6 +19,7 @@ typedef struct __OTS_SelectFilesWidgetItem {
 
 struct OTS_SelectFilesWidget_Private {
     OTS_Vector *items; // Contain PX_Object object.
+    OTS_SelectFilesWidget_AddItemEvent event;
     PX_Object *scrollArea, *selectBtn, *restartBtn, *explorer;
 };
 
@@ -28,6 +29,7 @@ static void selectFileCallback(PX_Object *obj, PX_Object_Event event, void *data
 static void restartFileCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static void deleteFileItemCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static void getSelectedPathCallback(PX_Object *obj, PX_Object_Event event, void *data);
+static void closeSelectFilesWidgetCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static int explorerGetPathFileName(const char path[], int count, char filename[][260], const char *filter);
 static int explorerGetPathFolderName(const char path[], int count, char filename[][260], const char *filter);
 
@@ -69,6 +71,12 @@ void OTS_SelectFilesWidget_SetFilter(OTS_SelectFilesWidget *widget, const char *
     strcpy(widget->filter, filter);
 }
 
+void OTS_SelectFilesWidget_RegisterAddItemEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_AddItemEvent event) {
+    widget->data->event = event;
+    OTS_DEBUG("AAA\n");
+    PX_ObjectRegisterEvent(widget->widget, PX_OBJECT_EVENT_WINDOWRESIZE, closeSelectFilesWidgetCallback, widget);
+}
+
 const char *OTS_SelectFilesWidget_GetFilter(OTS_SelectFilesWidget *widget) {
     return widget->filter;
 }
@@ -92,7 +100,9 @@ void OTS_SelectFilesWidget_Free(OTS_SelectFilesWidget *widget) {
     free(widget->filter); widget->data->restartBtn->Func_ObjectFree(widget->data->restartBtn);
 }
 
-
+void closeSelectFilesWidgetCallback(PX_Object *obj, PX_Object_Event event, void *data) {
+    OTS_DEBUG("CLOSE %d\n", 1);
+}
 
 void selectFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
     OTS_SelectFilesWidget *selectWidget = (OTS_SelectFilesWidget *)data;
