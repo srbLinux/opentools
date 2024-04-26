@@ -18,10 +18,15 @@ typedef struct __OTS_Vector {
 
 extern OTS_Vector *OTS_Vector_Initialize(int initSize);
 extern void *OTS_Vector_AT(OTS_Vector *vec, int index);
-extern int OTS_Vector_Erase(OTS_Vector *vec, int index);
+/**
+ * @brief   Delete the element in OTS_Vector and return the pointer to the element to the user, 
+ *          if index is not legal, NULL will be returned.
+*/
+extern void *OTS_Vector_Erase(OTS_Vector *vec, int index);
 extern int OTS_Vector_Pushback(OTS_Vector *vec, void *data);
 extern int OTS_Vector_PushAT(OTS_Vector *vec, void *data, int index);
 extern int OTS_Vector_Size(OTS_Vector *vec);
+extern int OTS_Vector_Find(OTS_Vector *vec, void *data);
 extern void OTS_Vector_Free(OTS_Vector *vec, int deep);
 
 #endif

@@ -19,29 +19,30 @@ typedef struct __OTS_SelectFilesWidgetItem {
 
 struct OTS_SelectFilesWidget_Private {
     OTS_Vector *items; // Contain PX_Object object.
-    OTS_SelectFilesWidget_AddItemEvent event;
+    void *usrptr;
     PX_Object *scrollArea, *selectBtn, *restartBtn, *explorer;
+    OTS_SelectFilesWidget_Event changeEvent, addEvent, deleteEvent;
 };
 
 static int explorerGetPathFileCount(const char *path, const char *filter);
 static int explorerGetPathFolderCount(const char *path, const char *filter);
 static void selectFileCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static void restartFileCallback(PX_Object *obj, PX_Object_Event event, void *data);
-static void deleteFileItemCallback(PX_Object *obj, PX_Object_Event event, void *data);
+static void deleteFilesCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static void getSelectedPathCallback(PX_Object *obj, PX_Object_Event event, void *data);
-static void closeSelectFilesWidgetCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static int explorerGetPathFileName(const char path[], int count, char filename[][260], const char *filter);
 static int explorerGetPathFolderName(const char path[], int count, char filename[][260], const char *filter);
 
 static OTS_SelectFilesWidgetItem *OTS_SelectFilesWidgetItem_Initialize(PX_Object *parent, int x, int y, int width, int height, const char *filepath, OTS_SelectFilesWidget *selectWidget);
-static void OTS_SelectFilesWidgetItem_SetFile(OTS_SelectFilesWidgetItem *item, const char *filepath, size_t filesize);
 
 OTS_SelectFilesWidget *OTS_SelectFilesWidget_Initialize(int width, int height, const char *name, const char *filter) {
     OTS_SelectFilesWidget *filesWidget = (OTS_SelectFilesWidget *)MP_Malloc(mp, sizeof(OTS_SelectFilesWidget));
-    filesWidget->widget = OTS_DEFUALT_WIDGET_CREATE; filesWidget->width = width, filesWidget->height = height;
+    filesWidget->widget = OTS_DEFUALT_WIDGET_CREATE; 
+    filesWidget->width = width, filesWidget->height = height;
     PX_Object_WidgetShow(filesWidget->widget);
     filesWidget->filter = (char *)MP_Malloc(mp, (strlen(filter)+10)*sizeof(char));
-    strcpy(filesWidget->filter, filter); filesWidget->texts = OTS_Vector_Initialize(20);
+    strcpy(filesWidget->filter, filter); 
+    filesWidget->texts = OTS_Vector_Initialize(20);
     filesWidget->data = (struct OTS_SelectFilesWidget_Private *)MP_Malloc(mp, sizeof(struct OTS_SelectFilesWidget_Private));
     filesWidget->data->items = OTS_Vector_Initialize(10);
     const char *selectText = "Select Files", *restartText = "Restart Selected Files";
@@ -71,10 +72,8 @@ void OTS_SelectFilesWidget_SetFilter(OTS_SelectFilesWidget *widget, const char *
     strcpy(widget->filter, filter);
 }
 
-void OTS_SelectFilesWidget_RegisterAddItemEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_AddItemEvent event) {
-    widget->data->event = event;
-    OTS_DEBUG("AAA\n");
-    PX_ObjectRegisterEvent(widget->widget, PX_OBJECT_EVENT_WINDOWRESIZE, closeSelectFilesWidgetCallback, widget);
+void OTS_SelectFilesWidget_RegisterItemChangeEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_Event event, void *uptr) {
+    widget->data->changeEvent = event; widget->data->usrptr = uptr;
 }
 
 const char *OTS_SelectFilesWidget_GetFilter(OTS_SelectFilesWidget *widget) {
@@ -100,10 +99,6 @@ void OTS_SelectFilesWidget_Free(OTS_SelectFilesWidget *widget) {
     free(widget->filter); widget->data->restartBtn->Func_ObjectFree(widget->data->restartBtn);
 }
 
-void closeSelectFilesWidgetCallback(PX_Object *obj, PX_Object_Event event, void *data) {
-    OTS_DEBUG("CLOSE %d\n", 1);
-}
-
 void selectFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
     OTS_SelectFilesWidget *selectWidget = (OTS_SelectFilesWidget *)data;
 #if __DEBUG_OTS__
@@ -117,10 +112,13 @@ void selectFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
                      explorerGetPathFolderCount, explorerGetPathFileCount, 
                      explorerGetPathFolderName, explorerGetPathFileName, "./");
 #endif
-    // OTS_FileSelect_Callback *callback = (OTS_FileSelect_Callback *)MP_Malloc(mp, sizeof(OTS_FileSelect_Callback));
     PX_ObjectRegisterEvent(explorer, PX_OBJECT_EVENT_EXECUTE, getSelectedPathCallback, selectWidget);
     if (strstr(selectWidget->filter, "png")) {
         gfilter = "png\0jpg\0jpeg\0svg\0";
+    } else if (strstr(selectWidget->filter, "pdf")) {
+        gfilter = "pdf\0";
+    } else {
+        gfilter = "";
     }
     PX_Object_ExplorerOpen(explorer);
 }
@@ -132,11 +130,9 @@ void restartFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
 
 void getSelectedPathCallback(PX_Object *obj, PX_Object_Event event, void *data) {
     OTS_DEBUG("data is not null, check %d.\n", (data!=NULL));
-    // OTS_FileSelect_Callback *callback = (OTS_FileSelect_Callback *)data;
     OTS_SelectFilesWidget *widget = (OTS_SelectFilesWidget *)data;
     char filepath[512] = {0};
     PX_Object_ExplorerGetPath(obj, filepath, 0);
-    // if (!filepath) return;
     OTS_DEBUG("Get file or folder path is not null, check %d.\n", __func__, (filepath!=NULL));
     OTS_DEBUG("Get File or Folder path is %s.\n", __func__, filepath);
     int size = OTS_Vector_Size(widget->texts);
@@ -144,23 +140,18 @@ void getSelectedPathCallback(PX_Object *obj, PX_Object_Event event, void *data) 
         OTS_SelectFilesWidgetItem_Initialize(widget->data->scrollArea, 0, (size)*80, widget->width-20, 80, filepath, widget);
     OTS_Vector_Pushback(widget->texts, filepath); OTS_Vector_Pushback(widget->data->items, item);
     PX_Object_ExplorerClose(obj); obj->Func_ObjectFree(obj);
+    if (widget->data->changeEvent) {
+        widget->data->changeEvent(widget->data->usrptr, widget->texts);
+    }
+    if (widget->data->addEvent) {
+        widget->data->addEvent(widget->data->usrptr, filepath);
+    }
 }
 
-int explorerGetPathFolderCount(const char *path, const char *filter) {
-    return PX_FileGetDirectoryFileCount(path, PX_FILEENUM_TYPE_FOLDER, filter);
-}
-
-int explorerGetPathFileCount(const char *path, const char *filter) {
-    return PX_FileGetDirectoryFileCount(path, PX_FILEENUM_TYPE_FILE, gfilter);
-}
-
-int explorerGetPathFolderName(const char path[], int count, char filename[][260], const char *filter) {
-    return PX_FileGetDirectoryFileName(path, count, filename, PX_FILEENUM_TYPE_FOLDER, filter);
-}
-
-int explorerGetPathFileName(const char path[], int count, char filename[][260], const char *filter) {
-    return PX_FileGetDirectoryFileName(path, count, filename, PX_FILEENUM_TYPE_FILE, gfilter);
-}
+struct DeleteFileItem {
+    OTS_SelectFilesWidget *widget;
+    OTS_SelectFilesWidgetItem *item;
+};
 
 OTS_SelectFilesWidgetItem *OTS_SelectFilesWidgetItem_Initialize(PX_Object *parent, int x, int y, int width, int height, const char *filepath, OTS_SelectFilesWidget *selectWidget) {
     OTS_SelectFilesWidgetItem *item = (OTS_SelectFilesWidgetItem *)MP_Malloc(mp, sizeof(OTS_SelectFilesWidgetItem));
@@ -196,11 +187,29 @@ OTS_SelectFilesWidgetItem *OTS_SelectFilesWidgetItem_Initialize(PX_Object *paren
     int btnWidth = OTS_FontTextWidth(gs->textFont, "Delete Item"), btnHeight = OTS_FontTextHeight(gs->textFont, "Delete Item")+6;
     subwidget = PX_Object_PushButtonCreate(mp, item->widget, width-btnWidth-50, 10, btnWidth+20, btnHeight, "Delete Item", gs->textFont->fontModule);
     PX_Object_PushButtonSetStyle(subwidget, PX_OBJECT_PUSHBUTTON_STYLE_ROUNDRECT);
-    PX_ObjectRegisterEvent(subwidget, PX_OBJECT_EVENT_EXECUTE, deleteFileItemCallback, selectWidget);
+    struct DeleteFileItem *dItem = (struct DeleteFileItem *)MP_Malloc(mp, sizeof(struct DeleteFileItem));
+    dItem->item = item; dItem->widget = selectWidget;
+    PX_ObjectRegisterEvent(subwidget, PX_OBJECT_EVENT_EXECUTE, deleteFileItemCallback, dItem);
     return item;
 }
 
-void deleteFileItemCallback(PX_Object *obj, PX_Object_Event event, void *data) {
-    // PX_Object_WidgetHide(obj);
+void deleteFileItemCallback(PX_Object *obj, PX_Object_Event event, void *uptr) {
+    OTS_SelectFilesWidgetItem *item = (OTS_SelectFilesWidgetItem *)uptr;
+    PX_Object_WidgetGetRoot(item);
+}
 
+int explorerGetPathFolderCount(const char *path, const char *filter) {
+    return PX_FileGetDirectoryFileCount(path, PX_FILEENUM_TYPE_FOLDER, filter);
+}
+
+int explorerGetPathFileCount(const char *path, const char *filter) {
+    return PX_FileGetDirectoryFileCount(path, PX_FILEENUM_TYPE_FILE, gfilter);
+}
+
+int explorerGetPathFolderName(const char path[], int count, char filename[][260], const char *filter) {
+    return PX_FileGetDirectoryFileName(path, count, filename, PX_FILEENUM_TYPE_FOLDER, filter);
+}
+
+int explorerGetPathFileName(const char path[], int count, char filename[][260], const char *filter) {
+    return PX_FileGetDirectoryFileName(path, count, filename, PX_FILEENUM_TYPE_FILE, gfilter);
 }

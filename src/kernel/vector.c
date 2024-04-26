@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "../defines.h"
+#include "./debug.h"
 
 OTS_Vector *OTS_Vector_Initialize(int initSize) {
     OTS_Vector *vec = (OTS_Vector *)malloc(sizeof(OTS_Vector));
@@ -15,16 +16,25 @@ OTS_Vector *OTS_Vector_Initialize(int initSize) {
     return vec;
 }
 
-int OTS_Vector_Erase(OTS_Vector *vec, int index) {
+void *OTS_Vector_Erase(OTS_Vector *vec, int index) {
     if (!vec) {
-        OTS_err_info("%s: OTS_Vector object is null\n", __func__);
-        return 0;
+        OTS_ERROR("OTS_Vector object is null.\n");
+        return NULL;
     }
-    if (index < 0 || index > vec->size) {
-        OTS_err_info("%s: index outrange.\n", __func__);
-        return 0;
+    if (index < 0 || index >= vec->size) {
+        OTS_ERROR("Index is out of range.\n");
+        return NULL;
     }
-    vec->data[index] = NULL;
+    void *ptr=NULL;
+    if (vec->data[index] != NULL) {
+        ptr = vec->data[index];
+        vec->data[index] = NULL;
+    }
+    for (int i=index;i<vec->size-1;++i) {
+        vec->data[i] = vec->data[i+1];
+    }
+    vec->size -- ;
+    return ptr;
 }
 
 int OTS_Vector_PushAT(OTS_Vector *vec, void *data, int index) {
@@ -65,6 +75,15 @@ void *OTS_Vector_AT(OTS_Vector *vec, int index) {
 
 int OTS_Vector_Size(OTS_Vector *vec) {
     return vec->size;
+}
+
+int OTS_Vector_Find(OTS_Vector *vec, void *data) {
+    for (int i=0;i<OTS_Vector_Size(vec);i++) {
+        if (OTS_Vector_AT(vec, i)==data) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 void OTS_Vector_Free(OTS_Vector *vec, int deep) {

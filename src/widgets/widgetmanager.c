@@ -52,6 +52,8 @@ px_bool OTS_WidgetManager_WidgetShowByIndex(OTS_WidgetManager *manager, int inde
         return PX_FALSE;
     }
     if (index == manager->nowWidget) {
+        PX_Object *widget = (PX_Object *)OTS_Vector_AT(manager->widgets, index);
+        PX_Object_WidgetShow(widget);
         return PX_TRUE;
     }
     OTS_DEBUG("now manager has %d widget.\n", PX_VectorSize(manager->widgets));
