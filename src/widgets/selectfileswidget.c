@@ -14,12 +14,13 @@ typedef struct __OTS_SelectFilesWidgetItem {
     char *fileName;
     size_t fileSize;
     PX_Object *widget;
+    int x, y, width, height;
 } OTS_SelectFilesWidgetItem;
 
 
 struct OTS_SelectFilesWidget_Private {
     OTS_Vector *items; // Contain PX_Object object.
-    void *usrptr;
+    void *changeUsr, *deleteUsr, *addUsr;
     PX_Object *scrollArea, *selectBtn, *restartBtn, *explorer;
     OTS_SelectFilesWidget_Event changeEvent, addEvent, deleteEvent;
 };
@@ -28,12 +29,16 @@ static int explorerGetPathFileCount(const char *path, const char *filter);
 static int explorerGetPathFolderCount(const char *path, const char *filter);
 static void selectFileCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static void restartFileCallback(PX_Object *obj, PX_Object_Event event, void *data);
-static void deleteFilesCallback(PX_Object *obj, PX_Object_Event event, void *data);
+static void deleteFileItemCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static void getSelectedPathCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static int explorerGetPathFileName(const char path[], int count, char filename[][260], const char *filter);
 static int explorerGetPathFolderName(const char path[], int count, char filename[][260], const char *filter);
 
+/**
+ * OTS_SelectFilesWidgetItem 相关结构体函数
+*/
 static OTS_SelectFilesWidgetItem *OTS_SelectFilesWidgetItem_Initialize(PX_Object *parent, int x, int y, int width, int height, const char *filepath, OTS_SelectFilesWidget *selectWidget);
+static void OTS_SelectFilesWidgetItem_Free(OTS_SelectFilesWidgetItem *item);
 
 OTS_SelectFilesWidget *OTS_SelectFilesWidget_Initialize(int width, int height, const char *name, const char *filter) {
     OTS_SelectFilesWidget *filesWidget = (OTS_SelectFilesWidget *)MP_Malloc(mp, sizeof(OTS_SelectFilesWidget));
@@ -72,8 +77,19 @@ void OTS_SelectFilesWidget_SetFilter(OTS_SelectFilesWidget *widget, const char *
     strcpy(widget->filter, filter);
 }
 
+/**
+ * 三个注册回调的函数
+*/
+void OTS_SelectFilesWidget_RegisterItemAddEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_Event event, void *uptr) {
+    widget->data->addEvent = event; widget->data->addUsr = uptr;
+}
+
 void OTS_SelectFilesWidget_RegisterItemChangeEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_Event event, void *uptr) {
-    widget->data->changeEvent = event; widget->data->usrptr = uptr;
+    widget->data->changeEvent = event; widget->data->changeUsr = uptr;
+}
+
+void OTS_SelectFilesWidget_RegisterItemDeleteEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_Event event, void *uptr) {
+    widget->data->deleteEvent = event; widget->data->deleteUsr = uptr;
 }
 
 const char *OTS_SelectFilesWidget_GetFilter(OTS_SelectFilesWidget *widget) {
@@ -91,6 +107,7 @@ void OTS_SelectFilesWidget_SetFilesPath(OTS_SelectFilesWidget *widget, const cha
         OTS_Vector_Pushback(widget->texts, filespath_copy);
         OTS_SelectFilesWidgetItem *item 
             = OTS_SelectFilesWidgetItem_Initialize(widget->data->scrollArea, 10, i*80+20, widget->width-20, 40, filespath[i], widget);
+        OTS_Vector_Pushback(widget->data->items, item); OTS_Vector_Pushback(widget->texts, filespath_copy);
     }
 }
 
@@ -99,6 +116,9 @@ void OTS_SelectFilesWidget_Free(OTS_SelectFilesWidget *widget) {
     free(widget->filter); widget->data->restartBtn->Func_ObjectFree(widget->data->restartBtn);
 }
 
+/**
+ * 点击选择文件的函数回调
+*/
 void selectFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
     OTS_SelectFilesWidget *selectWidget = (OTS_SelectFilesWidget *)data;
 #if __DEBUG_OTS__
@@ -128,6 +148,9 @@ void restartFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
 
 }
 
+/**
+ * 选择之后获得选中文件路径的函数回调
+ */
 void getSelectedPathCallback(PX_Object *obj, PX_Object_Event event, void *data) {
     OTS_DEBUG("data is not null, check %d.\n", (data!=NULL));
     OTS_SelectFilesWidget *widget = (OTS_SelectFilesWidget *)data;
@@ -138,13 +161,14 @@ void getSelectedPathCallback(PX_Object *obj, PX_Object_Event event, void *data) 
     int size = OTS_Vector_Size(widget->texts);
     OTS_SelectFilesWidgetItem *item = 
         OTS_SelectFilesWidgetItem_Initialize(widget->data->scrollArea, 0, (size)*80, widget->width-20, 80, filepath, widget);
+    item->x = 0, item->y = size*80, item->width = widget->width-20, item->height = 80;
     OTS_Vector_Pushback(widget->texts, filepath); OTS_Vector_Pushback(widget->data->items, item);
     PX_Object_ExplorerClose(obj); obj->Func_ObjectFree(obj);
     if (widget->data->changeEvent) {
-        widget->data->changeEvent(widget->data->usrptr, widget->texts);
+        widget->data->changeEvent(widget->data->changeUsr, widget->texts);
     }
     if (widget->data->addEvent) {
-        widget->data->addEvent(widget->data->usrptr, filepath);
+        widget->data->addEvent(widget->data->addUsr, filepath);
     }
 }
 
@@ -152,6 +176,8 @@ struct DeleteFileItem {
     OTS_SelectFilesWidget *widget;
     OTS_SelectFilesWidgetItem *item;
 };
+
+//////////////////   OTS_SelectFilesWidgetItem 相关函数   ////////////////////
 
 OTS_SelectFilesWidgetItem *OTS_SelectFilesWidgetItem_Initialize(PX_Object *parent, int x, int y, int width, int height, const char *filepath, OTS_SelectFilesWidget *selectWidget) {
     OTS_SelectFilesWidgetItem *item = (OTS_SelectFilesWidgetItem *)MP_Malloc(mp, sizeof(OTS_SelectFilesWidgetItem));
@@ -193,9 +219,35 @@ OTS_SelectFilesWidgetItem *OTS_SelectFilesWidgetItem_Initialize(PX_Object *paren
     return item;
 }
 
+/**
+ * 绑定OTS_SelectFilesWidgetItem删除按钮的回调函数，即删除这个文件窗口。
+ * 同时删除之后需要将此后的窗口的向上移动
+*/
 void deleteFileItemCallback(PX_Object *obj, PX_Object_Event event, void *uptr) {
-    OTS_SelectFilesWidgetItem *item = (OTS_SelectFilesWidgetItem *)uptr;
-    PX_Object_WidgetGetRoot(item);
+    struct DeleteFileItem *item = (struct DeleteFileItem *)uptr;
+    OTS_SelectFilesWidget *widget = item->widget;
+    OTS_SelectFilesWidgetItem *fitem = item->item;
+    int ii;
+    for (ii=0;ii<OTS_Vector_Size(widget->data->items);ii++) {
+        OTS_SelectFilesWidgetItem *newItem = OTS_Vector_AT(widget->data->items, ii);
+        if (newItem==fitem) {
+            break;
+        }
+    }
+    char *text = OTS_Vector_Erase(widget->texts, ii);
+    OTS_SelectFilesWidgetItem *iitem = OTS_Vector_Erase(widget->data->items, ii);
+    free(text); OTS_SelectFilesWidgetItem_Free(iitem);
+    // PX_Object_ScrollAreaMoveToBottom(fitem->widget);
+    PX_Object_WidgetHide(fitem->widget); 
+    OTS_SelectFilesWidgetItem_Free(fitem);
+    for (;ii<OTS_Vector_Size(widget->data->items);ii++) {
+        OTS_SelectFilesWidgetItem *moveItem = OTS_Vector_AT(widget->data->items, ii);
+        // PX_Object_Widget
+    }
+}
+
+void OTS_SelectFilesWidgetItem_Free(OTS_SelectFilesWidgetItem *item) {
+    item->widget->Func_ObjectFree(item->widget);
 }
 
 int explorerGetPathFolderCount(const char *path, const char *filter) {

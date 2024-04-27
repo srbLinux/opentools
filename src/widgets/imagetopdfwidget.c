@@ -45,7 +45,7 @@ OTS_ImageToPDFWidget *OTS_ImageToPDFWidget_Initialize(int width, int height) {
     button = PX_Object_PushButtonCreate(mp, pdfWidget->widget, inputWidth+45+labelWidth+170+20, 20, 120, inputHeight, "Find Images", gs->textFont->fontModule);
     PX_Object_PushButtonSetStyle(button, PX_OBJECT_PUSHBUTTON_STYLE_ROUNDRECT); 
     PX_ObjectRegisterEvent(button, PX_OBJECT_EVENT_EXECUTE, selectFilesCallback, selectImagesWidget);
-    OTS_SelectFilesWidget_RegisterAddItemEvent(selectImagesWidget, addFilesCallback, pdfWidget);
+    OTS_SelectFilesWidget_RegisterItemChangeEvent(selectImagesWidget, addFilesCallback, pdfWidget);
     return pdfWidget;
 }
 
@@ -55,7 +55,7 @@ void selectFilesCallback(PX_Object *obj, PX_Object_Event event, void *data) {
 }
 
 void deleteFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
-
+    
 }
 
 void addFilesCallback(void *usrptr, void *data) {

@@ -36,7 +36,7 @@ extern void OTS_SelectFilesWidget_AddFile(OTS_SelectFilesWidget *widget, const c
  *                  // something to do
  *              }
 */
-extern void OTS_SelectFilesWidget_ResgiterItemAddEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_Event event, void *uptr);
+extern void OTS_SelectFilesWidget_RegisterItemAddEvent(OTS_SelectFilesWidget *widget, OTS_SelectFilesWidget_Event event, void *uptr);
 
 /**
  * @brief   The 
