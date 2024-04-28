@@ -9,9 +9,11 @@
 extern "C" {
 #endif
 
-extern void OTS_MessageBox_Warning(const char *content, PX_Object *parentWidget, OTS_Font *font, int style);
-extern void OTS_MessageBox_Critical(const char *content, PX_Object *parentWidget, OTS_Font *font, int style);
+typedef void (*MessageBox_Callback)(void *ptr);
 
+extern void OTS_MessageBox_Warning(const char *content, PX_Object *parentWidget, OTS_Font *font);
+extern void OTS_MessageBox_Critical(const char *content, PX_Object *parentWidget, OTS_Font *font);
+extern void OTS_MessageBox_Information(const char *content, PX_Object *parentWidget, OTS_Font *font);
 
 #ifdef __cplusplus
 }

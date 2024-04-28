@@ -13,6 +13,7 @@ typedef struct __OTS_Style {
     px_color textColor;
     px_color backgroundColor;
     OTS_Font *textFont;
+    enum OTS_Software_Style style;
 } OTS_Style;
 
 extern int OTS_Style_Software_Switch(OTS_Style *style);

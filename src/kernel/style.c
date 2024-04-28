@@ -12,9 +12,9 @@ extern OTS_Style *OTS_Style_Software_Create(enum OTS_Software_Style style) {
         break;
     case SOFTWARE_DARK:
         gStyle->textColor = PX_COLOR(255, 255, 255, 255);
-        gStyle->backgroundColor = PX_COLOR(255, 16, 16, 20);
+        gStyle->backgroundColor = PX_COLOR(255, 0, 0, 0);
     }
-    gStyle->textFont = OTS_FontStdCreate(FONT_SimSunb, 18);
+    gStyle->textFont = OTS_FontStdCreate(FONT_SimSunb, 18); gStyle->style = style;
     OTS_debug(logFILE, "%s: OTS_Style::textFont object initialize. check %d\n", __func__, (gStyle->textFont!=NULL));
     return gStyle;
 }

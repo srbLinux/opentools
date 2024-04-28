@@ -100,6 +100,9 @@ OTS_Vector *OTS_SelectFilesWidget_GetFilesPath(OTS_SelectFilesWidget *widget) {
     return widget->texts;
 }
 
+/**
+ * 批量添加文件到选择文件的窗口
+*/
 void OTS_SelectFilesWidget_SetFilesPath(OTS_SelectFilesWidget *widget, const char **filespath, int fileslen) {
     for (int i=0;i<fileslen;i++) {
         char *filespath_copy = (char *)malloc(sizeof(char)*strlen(filespath[i]));
@@ -145,7 +148,14 @@ void selectFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
 
 
 void restartFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
-
+    OTS_SelectFilesWidget *widget = (OTS_SelectFilesWidget *)data;
+    // 反向迭代，使得OTS_Vector_Erase的效率最高
+    for (int i=OTS_Vector_Size(widget->texts)-1;i>=0;i--) {
+        char *text = OTS_Vector_Erase(widget->texts, i);
+        OTS_SelectFilesWidgetItem *item = OTS_Vector_Erase(widget->data->items, i);
+        PX_Object_WidgetHide(item->widget); OTS_SelectFilesWidgetItem_Free(item);
+        free(text);
+    }
 }
 
 /**
@@ -159,10 +169,12 @@ void getSelectedPathCallback(PX_Object *obj, PX_Object_Event event, void *data) 
     OTS_DEBUG("Get file or folder path is not null, check %d.\n", __func__, (filepath!=NULL));
     OTS_DEBUG("Get File or Folder path is %s.\n", __func__, filepath);
     int size = OTS_Vector_Size(widget->texts);
+    char *filepath_copy = (char *)malloc(sizeof(char)*(strlen(filepath)+1));
+    strcpy(filepath_copy, filepath);
     OTS_SelectFilesWidgetItem *item = 
         OTS_SelectFilesWidgetItem_Initialize(widget->data->scrollArea, 0, (size)*80, widget->width-20, 80, filepath, widget);
     item->x = 0, item->y = size*80, item->width = widget->width-20, item->height = 80;
-    OTS_Vector_Pushback(widget->texts, filepath); OTS_Vector_Pushback(widget->data->items, item);
+    OTS_Vector_Pushback(widget->texts, filepath_copy); OTS_Vector_Pushback(widget->data->items, item);
     PX_Object_ExplorerClose(obj); obj->Func_ObjectFree(obj);
     if (widget->data->changeEvent) {
         widget->data->changeEvent(widget->data->changeUsr, widget->texts);
@@ -234,20 +246,20 @@ void deleteFileItemCallback(PX_Object *obj, PX_Object_Event event, void *uptr) {
             break;
         }
     }
-    char *text = OTS_Vector_Erase(widget->texts, ii);
-    OTS_SelectFilesWidgetItem *iitem = OTS_Vector_Erase(widget->data->items, ii);
-    free(text); OTS_SelectFilesWidgetItem_Free(iitem);
-    // PX_Object_ScrollAreaMoveToBottom(fitem->widget);
-    PX_Object_WidgetHide(fitem->widget); 
+    OTS_DEBUG("ii: %d, texts: %d, items: %d.\n", ii, (widget->texts!=NULL), (widget->data->items!=NULL));
+    char *text = OTS_Vector_AT(widget->texts, ii);
+    OTS_SelectFilesWidgetItem *iitem = OTS_Vector_AT(widget->data->items, ii);
+    OTS_DEBUG("text: %d, iitem: %d.\n", (text!=NULL), (iitem!=NULL));
+    free(text); //OTS_SelectFilesWidgetItem_Free(iitem);
+    // PX_Object_ScrollAreaMoveToBottom(iitem->widget);
+    PX_Object_WidgetHide(iitem->widget);
+    OTS_DEBUG("check fitem is not null, %d.\n", (fitem!=NULL));
     OTS_SelectFilesWidgetItem_Free(fitem);
-    for (;ii<OTS_Vector_Size(widget->data->items);ii++) {
-        OTS_SelectFilesWidgetItem *moveItem = OTS_Vector_AT(widget->data->items, ii);
-        // PX_Object_Widget
-    }
 }
 
 void OTS_SelectFilesWidgetItem_Free(OTS_SelectFilesWidgetItem *item) {
-    item->widget->Func_ObjectFree(item->widget);
+    //item->widget->Func_ObjectFree(item->widget); 
+    free(item->fileName);
 }
 
 int explorerGetPathFolderCount(const char *path, const char *filter) {

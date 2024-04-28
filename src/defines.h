@@ -24,6 +24,10 @@
 extern int MACID;
 extern FILE *logFILE;
 
+enum OTS_CopyTactics {
+    PTR_COPY_ADDRESS, PTR_COPY_DATA,
+};
+
 #if __linux__
 #define OTS_EXPORT __attribute__((visibility("default")))
 #endif
