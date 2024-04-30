@@ -7,6 +7,7 @@
 #include "../defines.h"
 #include "../global.h"
 
+#include "../kernel/set.h"
 #include "../kernel/font.h"
 #include "../kernel/debug.h"
 

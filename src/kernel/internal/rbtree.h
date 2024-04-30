@@ -1,6 +1,11 @@
 #ifndef _OTS_RBTREE_H_
 #define _OTS_RNTREE_H_
 
+/**
+ * @headerfile rbtree.h
+ * @brief 这是红黑树的C语言实现，是kernel/set.h和kernel/map.h的底层实现
+ */
+
 #include <stddef.h>
 
 #include "../../defines.h"
@@ -13,22 +18,12 @@ struct OTS_RBTree;
 struct OTS_RBTreeNode;
 struct OTS_RBTreeIterator;
 
-enum OTS_RBTreeNodeColor {
-    BLACK, RED,
-};
-
 struct OTS_RBTree 
 {
     size_t size;
     size_t keylen, valuelen;
     struct OTS_RBTreeNode *root;
     int (*nodecmp)(void *, void *);
-};
-
-struct OTS_RBTreeIterator 
-{
-    void *key;
-    struct OTS_RBTreeIterator *prev, *next;
 };
 
 /**
@@ -40,8 +35,21 @@ struct OTS_RBTreeIterator
 */
 struct OTS_RBTree *OTS_RBTree_Initialize(size_t keylen, size_t valuelen, int (*cmp)(void *, void *));
 int OTS_RBTree_Insert(struct OTS_RBTree *tree, void *key, void *value);
+void *OTS_RBTree_Erase1(struct OTS_RBTree *tree, void *key);
+void *OTS_RBTree_Erase2(struct OTS_RBTree *tree, struct OTS_RBTreeIterator *begin, struct OTS_RBTreeIterator *end);
 void *OTS_RBTree_Find(struct OTS_RBTree *tree, void *key);
 int OTS_RBTree_FindIF(struct OTS_RBTree *tree, void *key);
+
+// 和迭代器相关函数
+
+struct OTS_RBTreeIterator *OTS_RBTree_End(struct OTS_RBTree *tree);
+struct OTS_RBTreeIterator *OTS_RBTree_Begin(struct OTS_RBTree *tree);
+void OTS_RBTreeItor_Increase(struct OTS_RBTreeIterator *itor);
+void OTS_RBTreeItor_Decrease(struct OTS_RBTreeIterator *itor);
+void *OTS_RBTreeItor_GetKey(struct OTS_RBTreeIterator *itor);
+void *OTS_RBTreeItor_GetValue(struct OTS_RBTreeIterator *itor);
+
+// 提供了基本类型的比较函数
 
 extern int OTS_RBTree_str_cmp(void *, void *);
 extern int OTS_RBTree_int_cmp(void *, void *);

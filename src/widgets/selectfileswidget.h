@@ -3,6 +3,7 @@
 
 #include <PainterEngine.h>
 
+#include "../kernel/set.h"
 #include "../kernel/vector.h"
 
 #ifdef __cplusplus
@@ -13,6 +14,7 @@ struct OTS_SelectFilesWidget_Private;
 
 typedef struct __OTS_SelectFilesWidget {
     char *filter;
+    OTS_Set *textsSet;
     OTS_Vector *texts;
     PX_Object *widget;
     int width, height;

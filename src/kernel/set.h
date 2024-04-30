@@ -5,20 +5,21 @@
 extern "C" {
 #endif
 
+#include "./internal/rbtree.h"
+
 struct OTS_RBTree;
-struct OTS_RBTreeNode;
+struct OTS_RBTreeIterator;
 
-typedef struct _OTS_Set {
-    struct OTS_RBTreeNode *node;
-} OTS_Set;
+typedef struct OTS_RBTree           OTS_Set;
+typedef struct OTS_RBTreeIterator   OTS_SetIterator;
 
-typedef struct _OTS_SetIterator {
+/**
+ * @brief 由于Set使用RBTree实现，直接使用宏重新定义RBTree的底层函数即可
+*/
 
-} OTS_SetIterator;
 
-OTS_SetIterator *OTS_Set_Begin(OTS_Set *set);
-OTS_SetIterator *OTS_Set_End(OTS_Set *set);
-void OTS_Set_Add(OTS_SetIterator *itor);
+#define OTS_Set_Initialize(elemlen, cmp)    OTS_RBTree_Initialize(elemlen, elemlen, cmp)
+#define OTS_Set_Insert(set, key)    OTS_RBTree_Insert(set, key, key)
 
 #ifdef __cplusplus
 }
