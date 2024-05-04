@@ -33,21 +33,35 @@ struct OTS_RBTree
  *
  *  
 */
-struct OTS_RBTree *OTS_RBTree_Initialize(size_t keylen, size_t valuelen, int (*cmp)(void *, void *));
-int OTS_RBTree_Insert(struct OTS_RBTree *tree, void *key, void *value);
-void *OTS_RBTree_Erase1(struct OTS_RBTree *tree, void *key);
-void *OTS_RBTree_Erase2(struct OTS_RBTree *tree, struct OTS_RBTreeIterator *begin, struct OTS_RBTreeIterator *end);
-void *OTS_RBTree_Find(struct OTS_RBTree *tree, void *key);
-int OTS_RBTree_FindIF(struct OTS_RBTree *tree, void *key);
+extern struct OTS_RBTree *OTS_RBTree_Initialize(size_t keylen, size_t valuelen, int (*cmp)(void *, void *));
+extern int OTS_RBTree_Insert(struct OTS_RBTree *tree, void *key, void *value);
+extern void *OTS_RBTree_Erase1(struct OTS_RBTree *tree, void *key);
+extern void *OTS_RBTree_Erase2(struct OTS_RBTree *tree, struct OTS_RBTreeIterator *begin, struct OTS_RBTreeIterator *end);
+extern void *OTS_RBTree_Find(struct OTS_RBTree *tree, void *key);
+extern int OTS_RBTree_FindIF(struct OTS_RBTree *tree, void *key);
+extern OTS_RBTree_Size(struct OTS_RBTree *tree);
 
 // 和迭代器相关函数
 
-struct OTS_RBTreeIterator *OTS_RBTree_End(struct OTS_RBTree *tree);
-struct OTS_RBTreeIterator *OTS_RBTree_Begin(struct OTS_RBTree *tree);
-void OTS_RBTreeItor_Increase(struct OTS_RBTreeIterator *itor);
-void OTS_RBTreeItor_Decrease(struct OTS_RBTreeIterator *itor);
-void *OTS_RBTreeItor_GetKey(struct OTS_RBTreeIterator *itor);
-void *OTS_RBTreeItor_GetValue(struct OTS_RBTreeIterator *itor);
+/**
+ * \code
+ * OTS_RBTree *tree=OTS_RBTree_Initialize(sizeof(int), sizeof(char *), OTS_RBTree_int_cmp);
+ * OTS_RBTreeIterator *itor = OTS_RBTree_Begin(tree);
+ * for (;!OTS_RBTreeItor_Equal(itor, OTS_RBTree_End(tree));OTS_RBTreeItor_Increase(itor)) {
+ *  // something to do
+ *  
+ * }
+ * \brief
+ * 总体来说就是仿照C++中迭代器的作用
+*/
+
+extern struct OTS_RBTreeIterator *OTS_RBTree_End(struct OTS_RBTree *tree);
+extern struct OTS_RBTreeIterator *OTS_RBTree_Begin(struct OTS_RBTree *tree);
+extern void OTS_RBTreeItor_Increase(struct OTS_RBTreeIterator *itor);
+extern void OTS_RBTreeItor_Decrease(struct OTS_RBTreeIterator *itor);
+extern void *OTS_RBTreeItor_GetKey(struct OTS_RBTreeIterator *itor);
+extern void *OTS_RBTreeItor_GetValue(struct OTS_RBTreeIterator *itor);
+extern int OTS_RBTreeItor_Equal(struct OTS_RBTreeIterator *itor1, struct OTS_RBTreeIterator *itor2);
 
 // 提供了基本类型的比较函数
 

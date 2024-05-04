@@ -7,6 +7,7 @@ enum OTS_RBTreeNodeColor {
     BLACK, RED,
 };
 
+// 红黑树的节点
 struct OTS_RBTreeNode {
     void *key, *value;
     enum OTS_RBTreeNodeColor color;
@@ -27,6 +28,10 @@ static void rightRotate(struct OTS_RBTree *tree, struct OTS_RBTreeNode *node);
 static void exchangeNodeColor(struct OTS_RBTreeNode *node);
 // 查找当前节点的叔叔节点
 static struct OTS_RBTreeNode *findUncleNode(struct OTS_RBTreeNode *node);
+// 这个函数用于删除单个元素
+static int _M_OTS_RBTree_Delete(struct OTS_RBTree *tree, void *key);
+// 这个函数用于查找
+static struct OTS_RBTreeNode *_M_OTS_RBTree_Find(struct OTS_RBTreeNode *node, void *key, int (*cmp)(void *, void *));
 // 这个函数用于插入，不需要考虑红黑树的平衡条件，插入操作和二叉查找树相同
 static struct OTS_RBTreeNode *_M_OTS_RBTree_Insert(struct OTS_RBTree *tree, struct OTS_RBTreeNode *root, void *key, void *value);
 
@@ -50,81 +55,82 @@ struct OTS_RBTree *OTS_RBTree_Initialize(size_t keylen, size_t valuelen, int (*c
     return tree;
 }
 
+int OTS_RBTree_FindIF(struct OTS_RBTree *tree, void *key) {
+    return (_M_OTS_RBTree_Find(tree->root, key, tree->nodecmp)!=NULL);
+}
+
+void *OTS_RBTree_Find(struct OTS_RBTree *tree, void *key) {
+    struct OTS_RBTreeNode *node = _M_OTS_RBTree_Find(tree->root, key, tree->nodecmp);
+    if (node) return node->value;
+    else return NULL;
+}
+
 int OTS_RBTree_Insert(struct OTS_RBTree *tree, void *key, void *value) {
     struct OTS_RBTreeNode *node = _M_OTS_RBTree_Insert(tree, tree->root, key, value);
+    // 如果插入失败返回0
     if (!node) return 0;
-    struct OTS_RBTreeNode *parent, *gparent;
-    while ((parent=NODE_PARENT(node))&&NODE_IS_RED(parent)) {
-        gparent = NODE_PARENT(parent);
-        if (parent==gparent->lchild) {
-            
-        }
+    tree->size ++ ;
+    if (node==tree->root) {
+        tree->root->color = BLACK;
+        return 1;
     }
+
+    return 1;
 }
 
 /**
- *    px                                px
- *    /                                 /
- *   x                                 y
- *  / \         ---(左旋)-->          / \
- * lx  y                             x  ry
- *    / \                           / \
- *   ly ry                         lx ly
+ * 左旋
+ *              parent                                      node
+ *              /    \                                      /  \      
+ *          node    p_right         --(右旋)-->         n_left parent
+ *          /  \                                               /   \  
+ *     n_left  n_right                                    n_right  p_right
 */
-void leftRotate(struct OTS_RBTree *tree, struct OTS_RBTreeNode *x) {
-    struct OTS_RBTreeNode *y = x->rchild;
-    if (!y) return; // 如果右子节点为空，无法进行左旋操作
-
-    // 更新子节点的连接关系
-    x->rchild = y->lchild;
-    if (y->lchild)
-        y->lchild->parent = x;
-
-    // 更新y的父节点和x的父节点的连接关系
-    y->parent = x->parent;
-    if (!x->parent)
-        tree->root = y;
-    else if (x == x->parent->lchild)
-        x->parent->lchild = y;
-    else
-        x->parent->rchild = y;
-
-    // 更新x和y之间的连接关系
-    y->lchild = x;
-    x->parent = y;
+void leftRotate(struct OTS_RBTree *tree, struct OTS_RBTreeNode *node) {
+    struct OTS_RBTreeNode *parent = node->parent;
+    if (!parent) return;
+    struct OTS_RBTreeNode *n_right = node->rchild;
+    struct OTS_RBTreeNode *gparent = parent->parent;
+    parent->lchild = n_right; n_right->parent = parent;
+    if (gparent) { // 代表parent是红黑树的根节点，node将会旋转到树的根节点
+        if (parent==gparent->lchild) 
+            gparent->lchild = node;
+        else 
+            gparent->rchild = node;
+    } else {
+        node->parent = NULL; tree->root = node;
+    }
+    node->rchild = parent; parent->parent = node;
 }
 
 /**
- *      py                          py
- *      /                           /
- *     y                           x
- *    / \       --(右旋)-->       / \
- *   x  ry                       lx  y 
- *  / \                             / \   
- * lx rx                           rx ry 
+ * 右旋
+ *        parent                                      node
+ *        /    \                                      /  \
+ *   p_left    node         --(左旋)-->          parent   n_right
+ *             /  \                              /    \
+ *        n_left  n_right                   p_left    n_left
 */
-void rightRotate(struct OTS_RBTree *tree, struct OTS_RBTreeNode *y) {
-    struct OTS_RBTreeNode *x = y->lchild;
-    if (!x) return;
-
-    // 更新子节点的连接关系
-    y->lchild = x->rchild;
-    if (x->rchild)
-        x->rchild->parent = y;
-
-    // 更新x的父节点和y的父节点的连接关系
-    x->parent = y->parent;
-    if (!y->parent)
-        tree->root = x;
-    else if (y == y->parent->lchild)
-        y->parent->lchild = x;
-    else
-        y->parent->rchild = x;
-
-    // 更新y和x之间的连接关系
-    x->rchild = y;
-    y->parent = x;
+void rightRotate(struct OTS_RBTree *tree, struct OTS_RBTreeNode *node) {
+    struct OTS_RBTreeNode *parent = node->parent;
+    // 如果没有父节点，无法进行左旋
+    if (!parent) return;
+    struct OTS_RBTreeNode *n_left = node->lchild;
+    struct OTS_RBTreeNode *gparent = parent->parent;
+    // step1: 将n_left节点挂载在parent节点的右孩子上
+    n_left->parent = parent; parent->rchild = n_left;
+    // step2: 将parent节点挂载在node节点的左孩子上，同时将node作为gparent节点的孩子
+    if (gparent) {
+        if (gparent->lchild==parent) {
+            gparent->lchild = node;
+        } else 
+            gparent->rchild = node;
+    } else { // 如果原来的parent就是root节点
+        node->parent = NULL; tree->root = node;
+    }
+    node->lchild = parent; parent->parent = node;
 }
+
 
 struct OTS_RBTreeNode *findUncleNode(struct OTS_RBTreeNode *node) {
     if (!node->parent) return NULL;
@@ -156,6 +162,13 @@ struct OTS_RBTreeNode *_M_OTS_RBTree_Insert(struct OTS_RBTree *tree, struct OTS_
     } else {
         return NULL;
     }
+}
+
+struct OTS_RBTreeNode *_M_OTS_RBTree_Find(struct OTS_RBTreeNode *node, void *key, int (*cmp)(void *, void *)) {
+    if (!node) return NULL;
+    if (node&&node->key==key) return node;
+    if (cmp(node->key, key)>0) return _M_OTS_RBTree_Find(node->lchild, key, cmp);
+    else if (cmp(node->key, key)<0) return _M_OTS_RBTree_Find(node->rchild, key, cmp);
 }
 
 ////    几个基本类型的比较函数    ////
