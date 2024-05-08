@@ -5,7 +5,9 @@
 
 #include "../kernel/font.h"
 #include "../kernel/debug.h"
+#include "../kernel/platform.h"
 
+#include "messagebox.h"
 #include "selectfileswidget.h"
 
 #include <hpdf.h>
@@ -13,6 +15,7 @@
 struct OTS_ImageToPDFWidgetPrivate {
     PX_Object *selectBar, *passwdLine, *parent;
     OTS_Vector *selectItems;
+    char *outputFolder, *outputFileName;
 };
 
 typedef struct OTS_ImageToPDFWidgetPrivate OTS_ITPWPrivate;
@@ -21,6 +24,8 @@ static const char *getImageType(const char *imagepath);
 static void addFilesCallback(void *usrptr, void *data);
 static void deleteFileCallback(PX_Object *obj, PX_Object_Event event, void *data);
 static void selectFilesCallback(PX_Object *obj, PX_Object_Event event, void *data);
+static void transferPDFCallback(PX_Object *obj, PX_Object_Event event, void *data);
+static void selectOutputFolderCallback(PX_Object *obj, PX_Object_Event event, void *data);
 
 OTS_ImageToPDFWidget *OTS_ImageToPDFWidget_Initialize(int width, int height) {
     OTS_ImageToPDFWidget *pdfWidget = (OTS_ImageToPDFWidget *)MP_Malloc(mp, sizeof(OTS_ImageToPDFWidget));
@@ -37,15 +42,32 @@ OTS_ImageToPDFWidget *OTS_ImageToPDFWidget_Initialize(int width, int height) {
     PX_Object *label = PX_Object_LabelCreate(mp, pdfWidget->widget, 20, 20, labelWidth, labelHeight+8, 
                                                         labelText, gs->textFont->fontModule, gs->textColor);
     inputWidth = 240, inputHeight = 25;
-    pdfWidget->pdata->selectBar = PX_Object_SelectBarCreate(mp, pdfWidget->widget, 30+labelWidth, 20, inputWidth, inputHeight, gs->textFont->fontModule);
+    pdfWidget->pdata->selectBar = PX_Object_SelectBarCreate(mp, pdfWidget->widget, 30+labelWidth, 20, inputWidth, 
+                                                                                inputHeight, gs->textFont->fontModule);
     PX_Object *button = PX_Object_PushButtonCreate(mp, pdfWidget->widget, inputWidth+45+labelWidth, 20, 170, 
                                                             inputHeight, "Delete this Image", gs->textFont->fontModule);
     PX_Object_PushButtonSetStyle(button, PX_OBJECT_PUSHBUTTON_STYLE_ROUNDRECT);
     PX_ObjectRegisterEvent(button, PX_OBJECT_EVENT_EXECUTE, deleteFileCallback, NULL);
-    button = PX_Object_PushButtonCreate(mp, pdfWidget->widget, inputWidth+45+labelWidth+170+20, 20, 120, inputHeight, "Find Images", gs->textFont->fontModule);
+    button = PX_Object_PushButtonCreate(mp, pdfWidget->widget, 
+                    inputWidth+45+labelWidth+175+20, 20, 120, inputHeight, "Find Images", gs->textFont->fontModule);
     PX_Object_PushButtonSetStyle(button, PX_OBJECT_PUSHBUTTON_STYLE_ROUNDRECT); 
     PX_ObjectRegisterEvent(button, PX_OBJECT_EVENT_EXECUTE, selectFilesCallback, selectImagesWidget);
     OTS_SelectFilesWidget_RegisterItemChangeEvent(selectImagesWidget, addFilesCallback, pdfWidget);
+    button = PX_Object_PushButtonCreate(mp, pdfWidget->widget, 
+                    inputWidth+45+labelWidth+170+20+130+20, 20, 220, inputHeight, "Transfer Images to PDF", gs->textFont->fontModule);
+    PX_Object_PushButtonSetStyle(button, PX_OBJECT_PUSHBUTTON_STYLE_ROUNDRECT);
+    PX_ObjectRegisterEvent(button, PX_OBJECT_EVENT_EXECUTE, transferPDFCallback, pdfWidget);
+    strcpy(labelText, "Output PDF Folder:");
+    labelWidth = OTS_FontTextWidth(gs->textFont, labelText);
+    labelHeight = OTS_FontTextHeight(gs->textFont, labelText);
+    label = PX_Object_LabelCreate(mp, pdfWidget->widget,
+                    20, 90, labelWidth, labelHeight, labelText, gs->textFont->fontModule, gs->textColor);
+    PX_Object *input = PX_Object_EditCreate(mp, pdfWidget->widget,
+                    10+labelWidth+20, 85, 540, 26, gs->textFont->fontModule);
+    button = PX_Object_PushButtonCreate(mp, pdfWidget->widget,
+                    10+labelWidth+20+550, 84, 240, 26, "Select Output PDF Folder", gs->textFont->fontModule);
+    PX_Object_PushButtonSetStyle(button, PX_OBJECT_PUSHBUTTON_STYLE_ROUNDRECT);
+    PX_ObjectRegisterEvent(button, PX_OBJECT_EVENT_EXECUTE, selectOutputFolderCallback, pdfWidget);
     return pdfWidget;
 }
 
@@ -58,14 +80,32 @@ void deleteFileCallback(PX_Object *obj, PX_Object_Event event, void *data) {
     
 }
 
+void transferPDFCallback(PX_Object *obj, PX_Object_Event event, void *data) {
+    OTS_ImageToPDFWidget *selectWidget = (OTS_ImageToPDFWidget *)data;
+    OTS_DEBUG("check selectWidget is not null, %d\n", (selectWidget!=NULL));
+    char *outputFolder = selectWidget->pdata->outputFolder;
+    char *outputFileName = selectWidget->pdata->outputFileName;
+    if (!outputFolder||!outputFileName||!strlen(outputFolder)||!strlen(outputFileName)) {
+        OTS_DEBUG("IN TEST%s", ".");
+        OTS_MessageBox_Warning("Please set output file path.", root, gs->textFont);
+        return ;
+    }
+}
+
+void selectOutputFolderCallback(PX_Object *obj, PX_Object_Event event, void *data) {
+
+}
+
 void addFilesCallback(void *usrptr, void *data) {
     OTS_Vector *vec = (OTS_Vector *)data;
     OTS_ImageToPDFWidget *widget = (OTS_ImageToPDFWidget *)usrptr;
     // OTS_DEBUG("%s.\n", OTS_Vector_AT(vec, 0));
     PX_Object_SelectBarClear(widget->pdata->selectBar);
     for (int i=0;i<OTS_Vector_Size(vec);i++) {
+        int filelen = 0;
         char *text = (char *)OTS_Vector_AT(vec, i);
-        PX_Object_SelectBarAddItem(widget->pdata->selectBar, text);
+        char **textarr = OTS_split(text, "/", &filelen);
+        PX_Object_SelectBarAddItem(widget->pdata->selectBar, textarr[filelen-1]);
     }
 }
 
@@ -73,7 +113,7 @@ void addFilesCallback(void *usrptr, void *data) {
 enum OTS_ConvertToPDFState OTS_ImagesToPDF(const char **imagespath, int imageslen, const char *pdfpath) {
     HPDF_Doc pdf = HPDF_New(NULL, NULL);
     if (!pdf) {
-        OTS_ERROR("Error: Cannot create PDF document.\n");  return ERROR_NOT_CREATE_DOCUMENT;
+        OTS_ERROR("Error: Cannot create PDF document%s\n", ".");  return ERROR_NOT_CREATE_DOCUMENT;
     }
     for (int i=0;i<imageslen;i++) {
         HPDF_Page page = HPDF_AddPage(pdf);
@@ -89,13 +129,13 @@ enum OTS_ConvertToPDFState OTS_ImagesToPDF(const char **imagespath, int imagesle
         } else if (!strcmp(type, "PNG")) {
             image = HPDF_LoadPngImageFromFile(pdf, imagespath[i]);
         } else {
-            OTS_ERROR("Error: not support this image type.\n"); return ERROR_IMAGETYPE_NOT_SUPPORT;
+            OTS_ERROR("Error: not support this image type%s\n", "."); return ERROR_IMAGETYPE_NOT_SUPPORT;
         }
         int width = HPDF_Image_GetWidth(image), height = HPDF_Image_GetHeight(image);
         HPDF_Page_DrawImage(page, image, 100, 100, width, height);
     }
     if (HPDF_SaveToFile(pdf, pdfpath)!=HPDF_OK) {
-        OTS_ERROR("Error: Cannot save pdf document.\n");
+        OTS_ERROR("Error: Cannot save pdf document%s\n", ".");
         HPDF_Free(pdf); return ERROR_NOT_SAVEPDF;
     }
     HPDF_Free(pdf);

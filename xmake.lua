@@ -45,8 +45,8 @@ target("opentools")
     add_includedirs("src/kernel")
     add_files("src//widgets/*.c")
     add_includedirs("src/widgets")
-    add_files("src/kernel/internal/*.c")
-    add_includedirs("src/kernel/internal")
+    add_files("src/kernel/container/*.c")
+    add_includedirs("src/kernel/container")
 
     --  Release和Debug版本选择  --
     if is_mode("debug") then

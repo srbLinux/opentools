@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../debug.h"
+
 enum OTS_RBTreeNodeColor {
     BLACK, RED,
 };
@@ -16,8 +18,7 @@ struct OTS_RBTreeNode {
 
 struct OTS_RBTreeIterator 
 {
-    void *key, *value, *pointer;
-    struct OTS_RBTreeIterator *prev, *next;
+    struct OTS_RBTreeNode *node;
 };
 
 // 左旋
@@ -26,6 +27,10 @@ static void leftRotate(struct OTS_RBTree *tree, struct OTS_RBTreeNode *node);
 static void rightRotate(struct OTS_RBTree *tree, struct OTS_RBTreeNode *node);
 // 更换节点颜色
 static void exchangeNodeColor(struct OTS_RBTreeNode *node);
+
+static void inorderTraversal(struct OTS_RBTreeNode *node);
+
+static void preorderTraversal(struct OTS_RBTreeNode *node);
 // 查找当前节点的叔叔节点
 static struct OTS_RBTreeNode *findUncleNode(struct OTS_RBTreeNode *node);
 // 这个函数用于删除单个元素
@@ -70,12 +75,26 @@ int OTS_RBTree_Insert(struct OTS_RBTree *tree, void *key, void *value) {
     // 如果插入失败返回0
     if (!node) return 0;
     tree->size ++ ;
+    if (node->parent&&node->parent->color==BLACK) return 1;
     if (node==tree->root) {
         tree->root->color = BLACK;
         return 1;
     }
+    if (node->parent&&node->parent->color==RED) {
+
+    }
 
     return 1;
+}
+
+size_t OTS_RBTree_Size(struct OTS_RBTree *tree) {
+    return tree->size;
+}
+
+void inorderTraversal(struct OTS_RBTreeNode *node) {
+    if (node->lchild) inorderTraversal(node->lchild);
+    if (node) OTS_DEBUG("OTS_RBTreeNode key: %d\n", node->key);
+    if (node->rchild) inorderTraversal(node->rchild);
 }
 
 /**
@@ -130,6 +149,7 @@ void rightRotate(struct OTS_RBTree *tree, struct OTS_RBTreeNode *node) {
     }
     node->lchild = parent; parent->parent = node;
 }
+
 
 
 struct OTS_RBTreeNode *findUncleNode(struct OTS_RBTreeNode *node) {

@@ -3,7 +3,8 @@
 
 /**
  * @headerfile rbtree.h
- * @brief 这是红黑树的C语言实现，是kernel/set.h和kernel/map.h的底层实现
+ * @brief   这是红黑树的C语言实现，是kernel/set.h和kernel/map.h的底层实现
+ *          注意该结构体不是线程安全的。
  */
 
 #include <stddef.h>
@@ -39,7 +40,7 @@ extern void *OTS_RBTree_Erase1(struct OTS_RBTree *tree, void *key);
 extern void *OTS_RBTree_Erase2(struct OTS_RBTree *tree, struct OTS_RBTreeIterator *begin, struct OTS_RBTreeIterator *end);
 extern void *OTS_RBTree_Find(struct OTS_RBTree *tree, void *key);
 extern int OTS_RBTree_FindIF(struct OTS_RBTree *tree, void *key);
-extern OTS_RBTree_Size(struct OTS_RBTree *tree);
+extern size_t OTS_RBTree_Size(struct OTS_RBTree *tree);
 
 // 和迭代器相关函数
 

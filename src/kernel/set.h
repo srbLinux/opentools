@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "./internal/rbtree.h"
+#include "./container/rbtree.h"
 
 struct OTS_RBTree;
 struct OTS_RBTreeIterator;
